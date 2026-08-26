@@ -4,23 +4,253 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>REPS OS</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- React & React DOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <!-- Babel Standalone (Compiles JSX in browser) -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body class="bg-black">
+<body class="bg-black text-neutral-100 selection:bg-neutral-800">
   <div id="root"></div>
 
   <script type="text/babel">
     const { useState } = React;
 
-    // Paste the RepsApp code here (without the "export default" keywords)
+    const INITIAL_REPS = [
+      { id: '1', category: 'BODY', title: 'Wake up on time (5:00 AM)', completed: true },
+      { id: '2', category: 'BODY', title: '10,000 Steps', completed: false },
+      { id: '3', category: 'BODY', title: 'Strength Training Session', completed: true },
+      { id: '4', category: 'BODY', title: 'Hydrate 3L Water', completed: false },
+      { id: '5', category: 'WEALTH', title: 'Review trading plan', completed: true },
+      { id: '6', category: 'WEALTH', title: 'Zero unnecessary impulse spending', completed: true },
+      { id: '7', category: 'BUSINESS', title: '1 Revenue-generating outreach action', completed: false },
+      { id: '8', category: 'BUSINESS', title: '90-Min Deep Work Sprint', completed: true },
+      { id: '9', category: 'MIND', title: 'Read 20 pages of non-fiction', completed: false },
+      { id: '10', category: 'MIND', title: 'Evening reflection & journaling', completed: false },
+      { id: '11', category: 'SELF', title: 'AM Skincare Routine', completed: true },
+      { id: '12', category: 'SELF', title: 'PM Skincare Routine', completed: false }
+    ];
+
+    const INITIAL_LIFETIME_REPS = {
+      BODY: 312,
+      WEALTH: 281,
+      BUSINESS: 401,
+      MIND: 190,
+      SELF: 100
+    };
+
     function RepsApp() {
-      // ... component logic ...
+      const [reps, setReps] = useState(INITIAL_REPS);
+      const [lifetimeData, setLifetimeData] = useState(INITIAL_LIFETIME_REPS);
+      const [activeTab, setActiveTab] = useState('today');
+
+      const toggleRep = (id) => {
+        setReps(prev => prev.map(rep => {
+          if (rep.id === id) {
+            const nextState = !rep.completed;
+            setLifetimeData(prevLife => ({
+              ...prevLife,
+              [rep.category]: prevLife[rep.category] + (nextState ? 1 : -1)
+            }));
+            return { ...rep, completed: nextState };
+          }
+          return rep;
+        }));
+      };
+
+      const completedToday = reps.filter(r => r.completed).length;
+      const totalToday = reps.length;
+      const todayPercentage = Math.round((completedToday / totalToday) * 100);
+
+      const totalLifetimeReps = Object.values(lifetimeData).reduce((a, b) => a + b, 0);
+      const currentLevel = Math.floor(totalLifetimeReps / 100);
+      const nextLevelReps = (currentLevel + 1) * 100;
+      const levelProgress = Math.round(((totalLifetimeReps % 100) / 100) * 100);
+
+      const getLevelTitle = (lvl) => {
+        if (lvl < 5) return 'INITIATE';
+        if (lvl < 10) return 'OPERATOR';
+        if (lvl < 15) return 'BUILDER';
+        if (lvl < 20) return 'ARCHITECT';
+        return 'MASTER';
+      };
+
+      const categories = Array.from(new Set(reps.map(r => r.category)));
+
+      return (
+        <div className="min-h-screen bg-black font-sans">
+          <div className="max-w-md mx-auto min-h-screen flex flex-col border-x border-neutral-900">
+            
+            {/* Header */}
+            <header className="px-6 pt-8 pb-4 border-b border-neutral-900 bg-black/50 backdrop-blur sticky top-0 z-10 flex justify-between items-end">
+              <div>
+                <span className="text-xs font-mono text-neutral-500 uppercase tracking-widest block">System OS</span>
+                <h1 className="text-2xl font-black tracking-tighter text-white">REPS</h1>
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-mono text-neutral-500 uppercase block">AUG 25</span>
+                <span className="text-sm font-semibold text-neutral-300">DAY 27 STREAK</span>
+              </div>
+            </header>
+
+            {/* Nav */}
+            <nav className="flex border-b border-neutral-900 text-xs font-mono uppercase tracking-wider">
+              <button
+                onClick={() => setActiveTab('today')}
+                className={`flex-1 py-3 text-center transition-colors ${
+                  activeTab === 'today' ? 'text-white border-b-2 border-white font-bold' : 'text-neutral-500 hover:text-neutral-300'
+                }`}
+              >
+                Daily Reps
+              </button>
+              <button
+                onClick={() => setActiveTab('progress')}
+                className={`flex-1 py-3 text-center transition-colors ${
+                  activeTab === 'progress' ? 'text-white border-b-2 border-white font-bold' : 'text-neutral-500 hover:text-neutral-300'
+                }`}
+              >
+                Life Level
+              </button>
+            </nav>
+
+            {/* Main */}
+            <main className="flex-1 px-6 py-6 space-y-8">
+              {activeTab === 'today' ? (
+                <>
+                  <section className="p-6 bg-neutral-950 border border-neutral-900 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider">Today's Score</span>
+                      <div className="text-3xl font-black tracking-tight mt-1 text-white">
+                        {completedToday} <span className="text-neutral-600 text-xl font-normal">/ {totalToday}</span>
+                      </div>
+                      <span className="text-xs font-mono text-emerald-400 mt-1 block">🔥 {todayPercentage}% Completed</span>
+                    </div>
+                    
+                    <div className="relative w-16 h-16 flex items-center justify-center">
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="32" cy="32" r="26" stroke="#262626" strokeWidth="6" fill="transparent" />
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="26"
+                          stroke="#ffffff"
+                          strokeWidth="6"
+                          fill="transparent"
+                          strokeDasharray={163}
+                          strokeDashoffset={163 - (163 * todayPercentage) / 100}
+                          className="transition-all duration-500 ease-out"
+                        />
+                      </svg>
+                      <span className="absolute text-xs font-mono font-bold text-white">{todayPercentage}%</span>
+                    </div>
+                  </section>
+
+                  <section className="space-y-6">
+                    {categories.map(category => {
+                      const categoryReps = reps.filter(r => r.category === category);
+                      return (
+                        <div key={category} className="space-y-3">
+                          <div className="flex justify-between items-center border-b border-neutral-900 pb-1">
+                            <h3 className="text-xs font-mono font-bold text-neutral-400 tracking-widest">{category}</h3>
+                            <span className="text-xs font-mono text-neutral-600">
+                              {categoryReps.filter(r => r.completed).length}/{categoryReps.length}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {categoryReps.map(rep => (
+                              <div
+                                key={rep.id}
+                                onClick={() => toggleRep(rep.id)}
+                                className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer flex items-center justify-between ${
+                                  rep.completed
+                                    ? 'bg-neutral-950/40 border-neutral-900/60 text-neutral-500 line-through'
+                                    : 'bg-neutral-950 border-neutral-800 text-neutral-100 hover:border-neutral-700'
+                                }`}
+                              >
+                                <span className="text-sm font-medium">{rep.title}</span>
+                                <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
+                                  rep.completed 
+                                    ? 'bg-white border-white text-black' 
+                                    : 'border-neutral-700'
+                                }`}>
+                                  {rep.completed && (
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </section>
+                </>
+              ) : (
+                <>
+                  <section className="p-6 bg-neutral-950 border border-neutral-900 rounded-2xl space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-xs font-mono text-neutral-500 uppercase tracking-widest">Current Status</span>
+                        <h2 className="text-3xl font-black tracking-tight mt-1 text-white">LEVEL {currentLevel}</h2>
+                        <span className="text-sm font-mono text-neutral-400 font-bold">{getLevelTitle(currentLevel)}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-2xl font-black text-white">{totalLifetimeReps}</span>
+                        <span className="text-xs font-mono text-neutral-500 block">LIFETIME REPS</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 pt-2">
+                      <div className="w-full bg-neutral-900 h-2 rounded-full overflow-hidden">
+                        <div
+                          className="bg-white h-full transition-all duration-500"
+                          style={{ width: `${levelProgress}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-[10px] font-mono text-neutral-500">
+                        <span>{totalLifetimeReps} Reps</span>
+                        <span>Next Level: {nextLevelReps}</span>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h3 className="text-xs font-mono font-bold text-neutral-400 tracking-widest uppercase">Attributes Breakdown</h3>
+                    <div className="space-y-3">
+                      {Object.entries(lifetimeData).map(([cat, count]) => {
+                        const target = 500;
+                        const percent = Math.min(100, Math.round((count / target) * 100));
+                        return (
+                          <div key={cat} className="p-4 bg-neutral-950 border border-neutral-900 rounded-xl space-y-2">
+                            <div className="flex justify-between items-center text-xs font-mono">
+                              <span className="font-bold text-neutral-200">{cat}</span>
+                              <span className="text-neutral-500">{count} Reps ({percent}%)</span>
+                            </div>
+                            <div className="w-full bg-neutral-900 h-1.5 rounded-full overflow-hidden">
+                              <div
+                                className="bg-neutral-200 h-full transition-all duration-500"
+                                style={{ width: `${percent}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                </>
+              )}
+            </main>
+          </div>
+        </div>
+      );
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<RepsApp />);
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<RepsApp />);
   </script>
 </body>
 </html>
